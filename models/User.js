@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // schema //
 const userSchema = mongoose.Schema({
@@ -42,13 +43,13 @@ userSchema.path('password').validate(function(v){
       user.invalidate('passwordConfirmation', 'Password Confirmation does not matched!');
     }
   }
-
+  //update user
   if(!user.isNew){
     if(!user.currentPassword){
       user.invalidate('currentPassword', 'Current Password is required!');
     }
     
-    else if(user.currentPassword != user.originalPassword){
+    else if(!bcrypt.compareSync(user.currentPassword != user.originalPassword)){
       user.invalidate('currentPassword', 'Current Password is invalid!');
     }
 
@@ -57,6 +58,25 @@ userSchema.path('password').validate(function(v){
     }
   }
 });
+
+
+//hash password
+userSchema.pre('save', function(next){
+  const user = this;
+  if(!user.isModified('password')){
+    return next();
+  } else {
+    user.password = bcrypt.hashSync(user.password);
+    return next();
+  }
+});
+
+//model methods
+userSchema.methods.authenticate = function(password) {
+  const user = this;
+  return bcrypt.compareSync(password, user.password)
+}
+
 
 //model & export
 const User = mongoose.model('user', userSchema);
