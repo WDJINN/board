@@ -5,42 +5,55 @@ const Post = require('../models/Post');
 //Index
 router.get('/', (req, res) => {
   Post.find({})
-  .sort('-createdAt')
-  .exec(function(err, posts){
-    if(err) return res.json(err);
-    res.render('posts/index', {posts:posts});
-  });
+    .sort('-createdAt')
+    .exec(function (err, posts) {
+      if (err) return res.json(err);
+      res.render('posts/index', {
+        posts: posts
+      });
+    });
 });
 
 
 //New
 router.get('/new', (req, res) => {
-  res.render('posts/new');
+  (err, post) => {
+    if (err) return res.json(err);
+    res.render('posts/new');
+  }
 });
 
 
 //Create
-router.post('/', (req, res)=>{
-  Post.create(req.body, function(err, post){
-    if(err) return res.json(err);
-    res.redirect('/post');
+router.post('/', (req, res) => {
+  Post.create(req.body, function (err, post) {
+    if (err) return res.json(err);
+    res.redirect('/posts');
   });
 });
 
 
 //Show
-router.get('/:id', (req, res) =>{
-  Post.findOne({_id:req.params.id}, function(err, post){
-    if(err) return res.json(err);
-    res.render('posts/show', {post:post});
+router.get('/:id', (req, res) => {
+  Post.findOne({
+    _id: req.params.id
+  }, function (err, post) {
+    if (err) return res.json(err);
+    res.render('posts/show', {
+      post: post
+    });
   });
 });
 
 //Edit
-router.get('/:id/edit', (req, res) =>{
-  Post.findOne({_id:req.params.id}, function(err, post){
-    if(err) return res.json(err);
-    res.render('posts/edit', {post:post});
+router.get('/:id/edit', (req, res) => {
+  Post.findOne({
+    _id: req.params.id
+  }, function (err, post) {
+    if (err) return res.json(err);
+    res.render('posts/edit', {
+      post: post
+    });
   });
 });
 
@@ -48,17 +61,21 @@ router.get('/:id/edit', (req, res) =>{
 //Update
 router.put('/:id', (req, res) => {
   req.body.updatedAt = Date.now();
-  Post.findOneAndUpdate({_id:req.params.id}, req.body, function(err, post){
-    if(err) return res.json(err);
-    res.redirect("/posts/"+req.params.id);
+  Post.findOneAndUpdate({
+    _id: req.params.id
+  }, req.body, function (err, post) {
+    if (err) return res.json(err);
+    res.redirect("/posts/" + req.params.id);
   });
 });
 
 
 //Destroy
-router.delete('/:id', function(req, res){
-  Post.deleteOne({_id:req.params.id}, function(err){
-    if(err) return res.json(err);
+router.delete('/:id', function (req, res) {
+  Post.deleteOne({
+    _id: req.params.id
+  }, function (err) {
+    if (err) return res.json(err);
     res.redirect('/posts');
   });
 });

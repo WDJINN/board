@@ -1,3 +1,31 @@
 body {
   font-family: 'Nanum Gothic', sans-serif;
 }
+
+.breadcrumb-item{
+  font-size: 0.8em !important;
+}
+
+.board-table {
+  table-layout: fixed;
+}
+
+.board-table .date {
+  width: 100px;
+}
+
+.ellipsis{
+  display: block;
+  width:100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-body{
+  white-space: pre-line;
+  /* 이 부분이 없으면 게시물 본문의 줄바꿈(/n)이 표현되지 않습니다. */
+}
+.post-info{
+  font-size: 0.8em;
+}

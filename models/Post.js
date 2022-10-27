@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 const postSchema = mongoose.Schema({
   title:{type:String, required:true},
   body:{type:String, required:true},
-  createdAt:{type:Data, default:Date.now},
-  updatedAt:{type:Data},
+  createdAt:{type:Date, default:Date.now},
+  updatedAt:{type:Date},
 });
 
 //model & export
