@@ -70,7 +70,7 @@ userSchema.virtual('newPassword')
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,16}$/;
 const passwordRegexErrorMessage = 'Should be minimum 8 characters of alphabet and number combination!';
 
-userSchema.path('password').validate(function (v) {
+userSchema.path('password').validate(function () {
   var user = this;
 
   //create user//
@@ -91,11 +91,12 @@ userSchema.path('password').validate(function (v) {
   if (!user.isNew) {
     if (!user.currentPassword) {
       user.invalidate('currentPassword', 'Current Password is required!');
-    } else if (!bcrypt.compareSync(user.currentPassword != user.originalPassword)) {
+    } 
+    else if (!bcrypt.compareSync(user.currentPassword != user.originalPassword)) {
       user.invalidate('currentPassword', 'Current Password is invalid!');
     }
 
-    if(user.newPassword && !passwordRegex.teset(user.newPassword)){
+    if(user.newPassword && !passwordRegex.test(user.newPassword)){
       user.invalidate('newPassword', passwordRegexErrorMessage);
     }
     else if (user.newPassword !== user.passwordConfirmation) {

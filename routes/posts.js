@@ -8,20 +8,15 @@ router.get('/', (req, res) => {
     .sort('-createdAt')
     .exec(function (err, posts) {
       if (err) return res.json(err);
-      res.render('posts/index', {
-        posts: posts
-      });
+      res.render('posts/index', {posts:posts});
     });
 });
 
 
 //New
 router.get('/new', (req, res) => {
-  (err, post) => {
-    if (err) return res.json(err);
     res.render('posts/new');
-  }
-});
+  });
 
 
 //Create
@@ -35,25 +30,17 @@ router.post('/', (req, res) => {
 
 //Show
 router.get('/:id', (req, res) => {
-  Post.findOne({
-    _id: req.params.id
-  }, function (err, post) {
+  Post.findOne({_id: req.params.id}, function (err, post) {
     if (err) return res.json(err);
-    res.render('posts/show', {
-      post: post
-    });
+    res.render('posts/show', {post: post});
   });
 });
 
 //Edit
 router.get('/:id/edit', (req, res) => {
-  Post.findOne({
-    _id: req.params.id
-  }, function (err, post) {
+  Post.findOne({_id: req.params.id}, function (err, post) {
     if (err) return res.json(err);
-    res.render('posts/edit', {
-      post: post
-    });
+    res.render('posts/edit', {post: post});
   });
 });
 
@@ -61,20 +48,16 @@ router.get('/:id/edit', (req, res) => {
 //Update
 router.put('/:id', (req, res) => {
   req.body.updatedAt = Date.now();
-  Post.findOneAndUpdate({
-    _id: req.params.id
-  }, req.body, function (err, post) {
+  Post.findOneAndUpdate({_id: req.params.id}, req.body, function (err, post) {
     if (err) return res.json(err);
-    res.redirect("/posts/" + req.params.id);
+    res.redirect("/posts/"+req.params.id);
   });
 });
 
 
 //Destroy
 router.delete('/:id', function (req, res) {
-  Post.deleteOne({
-    _id: req.params.id
-  }, function (err) {
+  Post.deleteOne({_id: req.params.id}, function (err) {
     if (err) return res.json(err);
     res.redirect('/posts');
   });

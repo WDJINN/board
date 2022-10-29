@@ -95,8 +95,9 @@ function parseError(errors){
       parsed[name] = { message:validationError.message };
     }
   } else if (errors.code == '11000' && errors.errmsg.indexOf('username')>0){
-      parsed. username = { message:'This username already exists!' };
+      parsed.username = { message:'This username already exists!' };
   } else {
     parsed.unhandled = JSON.stringify(errors);
   }
+  return parsed;
 }
