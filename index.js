@@ -43,6 +43,7 @@ app.use(function(req, res, next){
 app.use('/', require('./routes/home'));
 app.use('/posts', require('./routes/posts'));
 app.use('/users', require('./routes/users'));
+
 //Port setting
 const port = 3000;
 app.listen(port, function(){
