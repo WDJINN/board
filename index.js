@@ -5,6 +5,7 @@ const methodOverride = require('method-override');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('./config/passport.js');
+const util = require('./util');
 const app = express();
 
 //DB setting
@@ -41,7 +42,7 @@ app.use(function(req, res, next){
 
 //Routes
 app.use('/', require('./routes/home'));
-app.use('/posts', require('./routes/posts'));
+app.use('/posts', util.getPostQueryString, require('./routes/posts'));
 app.use('/users', require('./routes/users'));
 
 //Port setting

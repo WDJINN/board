@@ -4,14 +4,28 @@ const Post = require('../models/Post');
 const util = require('../util');
 
 //Index
-router.get('/', (req, res) => {
-  Post.find({})
+router.get('/', async function(req, res){
+  let page = Math.max(1, parseInt(req.query.page));
+  let limit = Math.max(1, parseInt(req.query.limit)); //한 페이지 당 표시되어야할 게시글 수
+  page = !isNaN(page)?page:1;
+  limit = !isNaN(limit)?limit:10;
+
+  const skip = (page-1)*limit; // ex) 3번째 페이지를 만들려면 DB에서 처음 20개의 게시글을 skip 하기 위함
+  const count = await Post.countDocuments({});
+  const maxPage = Math.ceil(count/limit);
+  const posts = await Post.find({})
     .populate('author')
     .sort('-createdAt')
-    .exec(function (err, posts) {
-      if (err) return res.json(err);
-      res.render('posts/index', {posts:posts});
-    });
+    .skip(skip)
+    .limit(limit)
+    .exec();
+    
+  res.render('posts/index', {
+    posts:posts,
+    currentPage:page,
+    maxPage:maxPage,
+    limit:limit
+  });
 });
 
 
@@ -30,9 +44,9 @@ router.post('/', util.isLoggedin, function(req, res) {
     if (err) {
       req.flash('post', req.body);
       req.flash('errors', util.parseError(err));
-      return res.redirect('/posts/new');
+      return res.redirect('/posts/new'+res.locals.getPostQueryString());
     }
-    res.redirect('/posts');
+    res.redirect('/posts'+res.locals.getPostQueryString(false, {page:1}));
   });
 });
 
@@ -69,9 +83,9 @@ router.put('/:id', util.isLoggedin, checkPermission, (req, res) => {
     if (err) {
       req.flash('post', req.body);
       req.flash('errors', util.parseError(err));
-      return res.redirect('/posts/'+req.params.id+'/edit');
+      return res.redirect('/posts/'+req.params.id+'/edit'+res.locals.getPostQueryString());
     }
-    res.redirect('/posts/'+req.params.id);
+    res.redirect('/posts/'+req.params.id+res.locals.getPostQueryString());
   });
 });
 
@@ -80,7 +94,7 @@ router.put('/:id', util.isLoggedin, checkPermission, (req, res) => {
 router.delete('/:id', util.isLoggedin, checkPermission, function (req, res) {
   Post.deleteOne({_id: req.params.id}, function (err) {
     if (err) return res.json(err);
-    res.redirect('/posts');
+    res.redirect('/posts'+res.locals.getPostQueryString());
   });
 });
 
