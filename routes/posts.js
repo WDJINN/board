@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
+const User = require('../models/User');
 const util = require('../util');
 
 //Index
@@ -10,21 +11,30 @@ router.get('/', async function(req, res){
   page = !isNaN(page)?page:1;
   limit = !isNaN(limit)?limit:10;
 
+
   const skip = (page-1)*limit; // ex) 3번째 페이지를 만들려면 DB에서 처음 20개의 게시글을 skip 하기 위함
-  const count = await Post.countDocuments({});
-  const maxPage = Math.ceil(count/limit);
-  const posts = await Post.find({})
-    .populate('author')
-    .sort('-createdAt')
-    .skip(skip)
-    .limit(limit)
-    .exec();
+  let maxPage = 0;
+  const searchQuery = await createSearchQuery(req.query);
+  let posts = [];
+
+  if(searchQuery){
+    const count = await Post.countDocuments(searchQuery);
+    maxPage = Math.ceil(count/limit);
+    posts = await Post.find(searchQuery)
+      .populate('author')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit)
+      .exec();
+  }
     
   res.render('posts/index', {
     posts:posts,
     currentPage:page,
     maxPage:maxPage,
-    limit:limit
+    limit:limit,
+    searchType:req.query.searchType,
+    searchText:req.query.searchText,
   });
 });
 
@@ -46,7 +56,7 @@ router.post('/', util.isLoggedin, function(req, res) {
       req.flash('errors', util.parseError(err));
       return res.redirect('/posts/new'+res.locals.getPostQueryString());
     }
-    res.redirect('/posts'+res.locals.getPostQueryString(false, {page:1}));
+    res.redirect('/posts'+res.locals.getPostQueryString(false, {page:1, searchText:''}));
   });
 });
 
@@ -98,14 +108,47 @@ router.delete('/:id', util.isLoggedin, checkPermission, function (req, res) {
   });
 });
 
-module.exports = router;
 
 //private function
 function checkPermission(req, res, next){
   Post.findOne({_id:req.params.id}, function(err, post){
     if(err) return res.json(err);
     if(post.author != req.user.id) return util.noPermission(req,res);
-
+    
     next();
   });
 }
+
+async function createSearchQuery(queries){
+  let searchQuery = {};
+  if(queries.searchType && queries.searchText && queries.searchText.length >= 3){
+    const searchTypes = queries.searchType.toLowerCase().split(',');
+    let postQueries = [];
+    if(searchTypes.indexOf('title')>=0){
+      postQueries.push({title:{$regex: new RegExp(queries.searchText,'i')}});
+    }
+    if(searchTypes.indexOf('body')>=0){
+      postQueries.push({body:{$regex: new RegExp(queries.searchText,'i')}});
+    }
+    if(postQueries.length>0) searchQuery={$or:postQueries};
+    
+    if(searchTypes.indexOf('authur!')>=0){
+      const user = await User.findOne({username:queries.searchText}).exec();
+      if(user) postQueries.push({author:user._id});
+    }
+    else if(searchTypes.indexOf('author')>=0){
+      const users = await User.find({username: {$regex: new RegExp(queries.searchText, 'i')}}).exec();
+      const userIds = [];
+      for(const user of users){
+        userIds.push(user._id);
+      }
+      if(userIds.length>0) postQueries.push({author:{$in:userIds}});
+    }
+    if(postQueries.length>0) searchQuery = {$or:postQueries};
+    else searchQuery = null
+  }
+  return searchQuery;
+}
+
+
+module.exports = router;

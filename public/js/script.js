@@ -28,11 +28,44 @@ $(function(){
       const dateString = $(element).data('date-time');
       if(dateString){
         const date = new Date(dateString);
-        $(element).html(getDate(date)+' '+getTime(date))
+        $(element).html(getDate(date)+' '+getTime(date));
       }
     });
   }
 
   convertDate();
   convertDateTime();
+});
+
+
+$(function(){
+  const search = window.location.search;
+  const params = {};
+
+  if(search){
+    $.each(search.slice(1).split('&'), function(index, param){
+      var index = param.indexOf('=');
+      if(index>0){
+        const key = param.slice(0, index);
+        const value = param.slice(index+1);
+
+        if(!params[key]) params[key] = value;
+      }
+    });
+  }
+  if(params.searchText && params.searchText.length>=3){
+    $('[data-search-highlight]').each(function(index,element){
+      const $element = $(element);
+      const searchHighlight = $element.data('search-highlight');
+      var index = params.searchType.indexOf(searchHighlight);
+
+      if(index>=0){
+        let decodedSearchText = params.searchText.replace(/\+/g,' ');
+        decodedSearchText = decodeURI(decodedSearchText);
+
+        const regex = new RegExp(`(${decodedSearchText})`,'ig');
+        $element.html($element.html().replace(regex, '<span class="highlighted">$1</span>'));
+      }
+    });
+  }
 });
