@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const User = require('../models/User');
+const Comment = require('../models/Comment');
 const util = require('../util');
 
 //Index
@@ -63,11 +64,19 @@ router.post('/', util.isLoggedin, function(req, res) {
 
 //Show
 router.get('/:id', (req, res) => {
-  Post.findOne({_id: req.params.id})
-    .populate('author')
-    .exec(function (err, post) {
-    if (err) return res.json(err);
-    res.render('posts/show', {post: post});
+  const commentForm = req.flash('commentForm')[0]||{_id:null, form:{}};
+  const commentError = req.flash('commentError')[0]||{_id:null, parentComment:null, errors:{}};
+
+  Promise.all([
+    Post.findOne({_id:req.params.id}).populate({path:'author', select:'username'}),
+    Comment.find({post:req.params.id}).sort('createdAt').populate({path:'author', select:'username'})
+  ])
+  .then(([post, comments]) =>{
+      res.render('posts/show', {post:post, comments:comments, commentForm:commentForm, commentError:commentError});
+  })
+  .catch((err) => {
+    console.log('err: ',err);
+    return res.json(err);
   });
 });
 
