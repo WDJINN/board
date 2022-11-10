@@ -21,12 +21,33 @@ router.get('/', async function(req, res){
   if(searchQuery){
     const count = await Post.countDocuments(searchQuery);
     maxPage = Math.ceil(count/limit);
-    posts = await Post.find(searchQuery)
-      .populate('author')
-      .sort('-createdAt')
-      .skip(skip)
-      .limit(limit)
-      .exec();
+    posts = await Post.aggregate([
+      { $match: searchQuery},
+      { $lookup: {
+        from:'users',
+        localField:'author',
+        foreignField:'_id',
+        as:'author'
+      }},
+      { $unwind:'$author'},
+      { $sort:{createdAt:-1}},
+      { $skip: skip},
+      { $limit: limit},
+      { $lookup: {
+        from:'comments',
+        localField:'_id',
+        foreignField:'post',
+        as:'comments'
+      }},
+      { $project: {
+        title: 1,
+        author: {
+          username: 1,
+        },
+        createdAt: 1,
+        commentCount: { $size: '$comments'}
+      }},
+    ]).exec();
   }
     
   res.render('posts/index', {
@@ -63,6 +84,7 @@ router.post('/', util.isLoggedin, function(req, res) {
 
 
 //Show
+
 router.get('/:id', (req, res) => {
   const commentForm = req.flash('commentForm')[0]||{_id:null, form:{}};
   const commentError = req.flash('commentError')[0]||{_id:null, parentComment:null, errors:{}};
@@ -72,7 +94,8 @@ router.get('/:id', (req, res) => {
     Comment.find({post:req.params.id}).sort('createdAt').populate({path:'author', select:'username'})
   ])
   .then(([post, comments]) =>{
-      res.render('posts/show', {post:post, comments:comments, commentForm:commentForm, commentError:commentError});
+    const commentTrees = util.convertToTrees(comments,'_id','parentComment','childComments');
+    res.render('posts/show', {post:post, commentTrees:commentTrees, commentForm:commentForm, commentError:commentError});
   })
   .catch((err) => {
     console.log('err: ',err);

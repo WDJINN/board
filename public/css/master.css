@@ -15,6 +15,11 @@ body {
   width: 100px;
 }
 
+.board-table .title-container:hover .title-comments,
+.board-table .title-container:hover .title-text{
+  text-decoration: underline;
+}
+
 .ellipsis{
   display: block;
   width:100%;
@@ -48,10 +53,12 @@ body {
 }
 
 .comment-edit,
-.comment-edit-enabled .comment-show{
+.comment-reply,
+.comment-edit-enabled .comment-show {
   display:none;
 }
 
-.comment-edit-enabled .comment-edit{
+.comment-edit-enabled .comment-edit,
+.comment-reply-enabled .comment-reply {
   display:inherit;
 }
